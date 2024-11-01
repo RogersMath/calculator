@@ -1,6 +1,10 @@
 // Initialize after UI script is loaded
 window.addEventListener('DOMContentLoaded', () => {
-  const { Display, initializeCalculator, setupKeyboardSupport } = window.calculatorUI;
+  // Make sure calculatorUI exists
+  if (!window.calculatorUI) {
+    console.error('Calculator UI not initialized');
+    return;
+  }
 
   // Calculator State Management
   const CalculatorState = {
@@ -51,13 +55,13 @@ window.addEventListener('DOMContentLoaded', () => {
       } else {
         CalculatorState.currentValue += value;
       }
-      Display.updateMain(CalculatorState.currentValue);
+      window.calculatorUI.Display.updateMain(CalculatorState.currentValue);
     },
 
     decimal() {
       if (!CalculatorState.currentValue.includes('.')) {
         CalculatorState.currentValue += '.';
-        Display.updateMain(CalculatorState.currentValue);
+        window.calculatorUI.Display.updateMain(CalculatorState.currentValue);
       }
     },
 
@@ -105,7 +109,7 @@ window.addEventListener('DOMContentLoaded', () => {
         } else {
           CalculatorState.currentValue = result.toString();
         }
-        Display.updateMain(CalculatorState.currentValue);
+        window.calculatorUI.Display.updateMain(CalculatorState.currentValue);
       }
     },
 
@@ -131,7 +135,7 @@ window.addEventListener('DOMContentLoaded', () => {
           .toString()
           .replace(/\.?0+$/, '');
       }
-      Display.updateMain(CalculatorState.currentValue);
+      window.calculatorUI.Display.updateMain(CalculatorState.currentValue);
     },
 
     equals() {
@@ -143,7 +147,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     clear() {
       CalculatorState.reset();
-      Display.updateMain('0');
+      window.calculatorUI.Display.updateMain('0');
       this.updateOperation();
     },
 
@@ -153,41 +157,41 @@ window.addEventListener('DOMContentLoaded', () => {
       } else {
         CalculatorState.currentValue = '0';
       }
-      Display.updateMain(CalculatorState.currentValue);
+      window.calculatorUI.Display.updateMain(CalculatorState.currentValue);
     },
 
     toggleSecond() {
       CalculatorState.secondMode = !CalculatorState.secondMode;
-      Display.updateSecondMode(CalculatorState.secondMode);
+      window.calculatorUI.Display.updateSecondMode(CalculatorState.secondMode);
     },
 
     updateOperation() {
       const { previousValue, operation, currentValue } = CalculatorState;
       if (previousValue !== null && operation !== null) {
-        Display.updatePrevious(`${previousValue} ${operation}`);
+        window.calculatorUI.Display.updatePrevious(`${previousValue} ${operation}`);
       } else {
-        Display.updatePrevious('');
+        window.calculatorUI.Display.updatePrevious('');
       }
     },
 
     // Memory operations
     memoryRecall() {
       CalculatorState.currentValue = CalculatorState.memory.toString();
-      Display.updateMain(CalculatorState.currentValue);
+      window.calculatorUI.Display.updateMain(CalculatorState.currentValue);
     },
 
     memoryStore() {
       CalculatorState.memory = parseFloat(CalculatorState.currentValue);
-      Display.updateMemoryIndicator(CalculatorState.memory);
+      window.calculatorUI.Display.updateMemoryIndicator(CalculatorState.memory);
     },
 
     memoryAdd() {
       CalculatorState.memory += parseFloat(CalculatorState.currentValue);
-      Display.updateMemoryIndicator(CalculatorState.memory);
+      window.calculatorUI.Display.updateMemoryIndicator(CalculatorState.memory);
     }
   };
 
   // Initialize calculator
-  initializeCalculator(Handlers);
-  setupKeyboardSupport(Handlers);
+  window.calculatorUI.initializeCalculator(Handlers);
+  window.calculatorUI.setupKeyboardSupport(Handlers);
 });
