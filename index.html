@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Advanced Calculator</title>
+  <title>Scientific Calculator</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -18,33 +18,74 @@
       border-radius: 10px;
       padding: 20px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-width: 350px;
+      width: 100%;
     }
 
     .display {
       background-color: #3c3c3c;
       color: #fff;
-      padding: 10px;
+      padding: 15px;
       font-size: 24px;
       text-align: right;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
       border-radius: 5px;
+      min-height: 30px;
+      word-wrap: break-word;
+      position: relative;
+    }
+
+    .previous-operation {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      font-size: 14px;
+      color: #888;
+    }
+
+    .current-value {
+      margin-top: 15px;
+    }
+
+    .mode-indicators {
+      display: flex;
+      justify-content: space-between;
+      color: #888;
+      font-size: 12px;
+      margin-bottom: 5px;
     }
 
     .buttons {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      grid-gap: 10px;
+      grid-template-columns: repeat(5, 1fr);
+      grid-gap: 8px;
     }
 
     button {
       background-color: #444444;
       color: #fff;
       border: none;
-      padding: 10px;
-      font-size: 18px;
+      padding: 12px 8px;
+      font-size: 16px;
       border-radius: 5px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 45px;
+    }
+
+    .secondary-function {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 2px;
+    }
+
+    button:active {
+      transform: scale(0.95);
     }
 
     button:hover {
@@ -67,37 +108,132 @@
       background-color: #1e7e34;
     }
 
-    button.clear {
+    button.clear, button.second {
       background-color: #dc3545;
     }
 
-    button.clear:hover {
+    button.clear:hover, button.second:hover {
       background-color: #c82333;
+    }
+
+    button.memory {
+      background-color: #6c757d;
+    }
+
+    button.memory:hover {
+      background-color: #5a6268;
+    }
+
+    button.function {
+      background-color: #17a2b8;
+    }
+
+    button.function:hover {
+      background-color: #138496;
+    }
+
+    button.active {
+      border: 2px solid #fff;
+    }
+
+    @media (max-width: 400px) {
+      .calculator {
+        width: 95%;
+        margin: 10px;
+      }
+      
+      button {
+        padding: 8px 4px;
+        font-size: 14px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="calculator">
-    <div class="display" id="display">0</div>
+    <div class="mode-indicators">
+      <span id="second-indicator">2ND: OFF</span>
+      <span id="memory-indicator">MEM: 0</span>
+    </div>
+    <div class="display">
+      <div class="previous-operation" id="previous-operation"></div>
+      <div class="current-value" id="display">0</div>
+    </div>
     <div class="buttons">
-      <button class="clear" onclick="clearCalculator()">C</button>
-      <button onclick="backspace()">⌫</button>
+      <!-- Row 1 -->
+      <button class="second" onclick="toggleSecond()">2nd</button>
+      <button class="memory" onclick="handleMemory('MR')">MR</button>
+      <button class="memory" onclick="handleMemory('MS')">MS</button>
+      <button class="memory" onclick="handleMemory('M+')">M+</button>
+      <button class="memory" onclick="handleMemory('MC')">MC</button>
+
+      <!-- Row 2 -->
+      <button class="function">
+        <span class="secondary-function">x³</span>
+        <span>x²</span>
+      </button>
+      <button class="function">
+        <span class="secondary-function">∛x</span>
+        <span>√x</span>
+      </button>
+      <button class="function" onclick="calculate1OverX()">1/x</button>
+      <button class="function" onclick="calculatePercent()">%</button>
       <button class="operator" onclick="operate('/')">/</button>
-      <button class="operator" onclick="operate('*')">*</button>
-      <button onclick="appendDigit('7')">7</button>
-      <button onclick="appendDigit('8')">8</button>
-      <button onclick="appendDigit('9')">9</button>
-      <button class="operator" onclick="operate('-')">-</button>
-      <button onclick="appendDigit('4')">4</button>
-      <button onclick="appendDigit('5')">5</button>
-      <button onclick="appendDigit('6')">6</button>
+
+      <!-- Row 3 -->
+      <button onclick="handleLetterOrNumber('x')">
+        <span class="secondary-function">x</span>
+        <span>7</span>
+      </button>
+      <button onclick="handleLetterOrNumber('y')">
+        <span class="secondary-function">y</span>
+        <span>8</span>
+      </button>
+      <button onclick="handleLetterOrNumber('z')">
+        <span class="secondary-function">z</span>
+        <span>9</span>
+      </button>
+      <button class="function" onclick="handleExponent()">xʸ</button>
+      <button class="operator" onclick="operate('*')">×</button>
+
+      <!-- Row 4 -->
+      <button onclick="handleLetterOrNumber('a')">
+        <span class="secondary-function">a</span>
+        <span>4</span>
+      </button>
+      <button onclick="handleLetterOrNumber('b')">
+        <span class="secondary-function">b</span>
+        <span>5</span>
+      </button>
+      <button onclick="handleLetterOrNumber('c')">
+        <span class="secondary-function">c</span>
+        <span>6</span>
+      </button>
+      <button class="function" onclick="handleParentheses('(')">(</button>
+      <button class="operator" onclick="operate('-')">−</button>
+
+      <!-- Row 5 -->
+      <button onclick="handleLetterOrNumber('d')">
+        <span class="secondary-function">d</span>
+        <span>1</span>
+      </button>
+      <button onclick="handleLetterOrNumber('e')">
+        <span class="secondary-function">e</span>
+        <span>2</span>
+      </button>
+      <button onclick="handleLetterOrNumber('f')">
+        <span class="secondary-function">f</span>
+        <span>3</span>
+      </button>
+      <button class="function" onclick="handleParentheses(')')">)</button>
       <button class="operator" onclick="operate('+')">+</button>
-      <button onclick="appendDigit('1')">1</button>
-      <button onclick="appendDigit('2')">2</button>
-      <button onclick="appendDigit('3')">3</button>
+
+      <!-- Row 6 -->
+      <button class="clear" onclick="clearCalculator()">C</button>
+      <button onclick="handleLetterOrNumber('0')">0</button>
+      <button onclick="handleLetterOrNumber('.')">.</button>
+      <button onclick="backspace()">⌫</button>
       <button class="equals" onclick="equals()">=</button>
-      <button onclick="appendDigit('0')">0</button>
-      <button onclick="appendDigit('.')">.</button>
     </div>
   </div>
 
@@ -105,36 +241,128 @@
     let currentValue = '0';
     let previousValue = null;
     let operation = null;
+    let newNumberStarted = false;
+    let secondMode = false;
+    let memory = 0;
+    let variables = {};
 
-    function appendDigit(digit) {
-      if (currentValue === '0' && digit !== '.') {
-        currentValue = digit;
+    // Add keyboard support
+    document.addEventListener('keydown', handleKeyPress);
+
+    function handleKeyPress(e) {
+      if (e.key >= '0' && e.key <= '9' || e.key === '.') {
+        handleLetterOrNumber(e.key);
+      } else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
+        operate(e.key);
+      } else if (e.key === 'Enter' || e.key === '=') {
+        equals();
+      } else if (e.key === 'Backspace') {
+        backspace();
+      } else if (e.key === 'Escape') {
+        clearCalculator();
+      } else if (e.key === '(' || e.key === ')') {
+        handleParentheses(e.key);
+      }
+    }
+
+    function toggleSecond() {
+      secondMode = !secondMode;
+      document.getElementById('second-indicator').textContent = `2ND: ${secondMode ? 'ON' : 'OFF'}`;
+      document.querySelector('.second').classList.toggle('active');
+    }
+
+    function handleLetterOrNumber(value) {
+      if (secondMode && /[a-z]/.test(value)) {
+        // Handle variable input
+        if (variables[value]) {
+          currentValue = variables[value].toString();
+          updateDisplay();
+        }
+        return;
+      }
+
+      if (value === '.' && currentValue.includes('.')) return;
+      
+      if (newNumberStarted || currentValue === '0') {
+        currentValue = value === '.' ? '0.' : value;
+        newNumberStarted = false;
       } else {
-        currentValue += digit;
+        currentValue += value;
       }
       updateDisplay();
     }
 
+    function handleMemory(action) {
+      switch (action) {
+        case 'MR':
+          currentValue = memory.toString();
+          break;
+        case 'MS':
+          memory = parseFloat(currentValue);
+          break;
+        case 'M+':
+          memory += parseFloat(currentValue);
+          break;
+        case 'MC':
+          memory = 0;
+          break;
+      }
+      document.getElementById('memory-indicator').textContent = `MEM: ${memory}`;
+      updateDisplay();
+    }
+
+    function calculate1OverX() {
+      if (currentValue !== '0') {
+        currentValue = (1 / parseFloat(currentValue)).toString();
+        updateDisplay();
+      } else {
+        updateDisplay('Error: Division by zero');
+      }
+    }
+
+    function calculatePercent() {
+      if (previousValue !== null) {
+        currentValue = (parseFloat(currentValue) * previousValue / 100).toString();
+      } else {
+        currentValue = (parseFloat(currentValue) / 100).toString();
+      }
+      updateDisplay();
+    }
+
+    function handleParentheses(paren) {
+      // Basic parentheses handling - could be expanded for full expression parsing
+      currentValue += paren;
+      updateDisplay();
+    }
+
+    function handleExponent() {
+      operate('^');
+    }
+
     function operate(op) {
-      if (previousValue !== null && operation !== null) {
+      if (previousValue !== null && !newNumberStarted) {
         calculate();
       }
       operation = op;
       previousValue = parseFloat(currentValue);
-      currentValue = '0';
+      newNumberStarted = true;
+      updatePreviousOperation();
     }
 
     function equals() {
       if (previousValue !== null && operation !== null) {
+        updatePreviousOperation(true);
         calculate();
         operation = null;
         previousValue = null;
+        newNumberStarted = true;
       }
     }
 
     function calculate() {
       const current = parseFloat(currentValue);
       let result;
+      
       switch (operation) {
         case '+':
           result = previousValue + current;
@@ -152,8 +380,15 @@
           }
           result = previousValue / current;
           break;
+        case '^':
+          result = Math.pow(previousValue, current);
+          break;
       }
-      currentValue = result.toString();
+
+      // Format the result to avoid floating point precision issues
+      result = parseFloat(result.toFixed(10));
+      // Remove trailing zeros after decimal point
+      currentValue = result.toString().replace(/\.?0+$/, '');
       updateDisplay();
     }
 
@@ -161,7 +396,9 @@
       currentValue = '0';
       previousValue = null;
       operation = null;
+      newNumberStarted = false;
       updateDisplay();
+      updatePreviousOperation();
     }
 
     function backspace() {
@@ -175,6 +412,20 @@
 
     function updateDisplay(message = currentValue) {
       document.getElementById('display').textContent = message;
+    }
+
+    function updatePreviousOperation(showEquals = false) {
+      const previousOpDisplay = document.getElementById('previous-operation');
+      if (previousValue !== null && operation !== null) {
+        const operator = operation === '*' ? '×' : 
+                        operation === '/' ? '÷' : 
+                        operation === '-' ? '−' : 
+                        operation === '^' ? '^' :
+                        operation;
+        previousOpDisplay.textContent = `${previousValue} ${operator} ${showEquals ? currentValue : ''}`;
+      } else {
+        previousOpDisplay.textContent = '';
+      }
     }
   </script>
 </body>
