@@ -65,38 +65,39 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     },
 
-    divide() { this.operator('/'); },
-    multiply() { this.operator('*'); },
-    subtract() { this.operator('-'); },
-    add() { this.operator('+'); },
-    power() { this.operator('^'); },
+    // Map operator symbols to their function names
+    divide: () => Handlers.operator('/'),
+    multiply: () => Handlers.operator('*'),
+    subtract: () => Handlers.operator('-'),
+    add: () => Handlers.operator('+'),
+    power: () => Handlers.operator('^'),
 
     operator(op) {
       if (CalculatorState.previousValue !== null) {
-        this.calculate();
+        Handlers.calculate();
       }
       CalculatorState.operation = op;
       CalculatorState.previousValue = parseFloat(CalculatorState.currentValue);
       CalculatorState.newNumberStarted = true;
-      this.updateOperation();
+      Handlers.updateOperation();
     },
 
     square() {
       const func = CalculatorState.secondMode ? 'cube' : 'square';
-      this.scientific(func);
+      Handlers.scientific(func);
     },
 
     sqrt() {
       const func = CalculatorState.secondMode ? 'cubeRoot' : 'sqrt';
-      this.scientific(func);
+      Handlers.scientific(func);
     },
 
     inverse() {
-      this.scientific('inverse');
+      Handlers.scientific('inverse');
     },
 
     percent() {
-      this.scientific('percent');
+      Handlers.scientific('percent');
     },
 
     scientific(func) {
@@ -118,37 +119,32 @@ window.addEventListener('DOMContentLoaded', () => {
 
       const current = parseFloat(CalculatorState.currentValue);
       const prev = CalculatorState.previousValue;
-      let result;
+      const operation = Operations.basic[CalculatorState.operation];
 
-      switch (CalculatorState.operation) {
-        case '+': result = prev + current; break;
-        case '-': result = prev - current; break;
-        case '*': result = prev * current; break;
-        case '/': result = current !== 0 ? prev / current : null; break;
-        case '^': result = Math.pow(prev, current); break;
-      }
-
-      if (result === null) {
-        CalculatorState.currentValue = 'Error';
-      } else {
-        CalculatorState.currentValue = parseFloat(result.toFixed(10))
-          .toString()
-          .replace(/\.?0+$/, '');
+      if (operation) {
+        const result = operation(prev, current);
+        if (result === null) {
+          CalculatorState.currentValue = 'Error';
+        } else {
+          CalculatorState.currentValue = parseFloat(result.toFixed(10))
+            .toString()
+            .replace(/\.?0+$/, '');
+        }
       }
       window.calculatorUI.Display.updateMain(CalculatorState.currentValue);
     },
 
     equals() {
-      this.calculate();
+      Handlers.calculate();
       CalculatorState.operation = null;
       CalculatorState.previousValue = null;
-      this.updateOperation();
+      Handlers.updateOperation();
     },
 
     clear() {
       CalculatorState.reset();
       window.calculatorUI.Display.updateMain('0');
-      this.updateOperation();
+      Handlers.updateOperation();
     },
 
     backspace() {
