@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Advanced Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+
+    .calculator {
+      background-color: #282828;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .display {
+      background-color: #3c3c3c;
+      color: #fff;
+      padding: 10px;
+      font-size: 24px;
+      text-align: right;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-gap: 10px;
+    }
+
+    button {
+      background-color: #444444;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      font-size: 18px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #555555;
+    }
+
+    button.operator {
+      background-color: #007bff;
+    }
+
+    button.operator:hover {
+      background-color: #0056b3;
+    }
+
+    button.equals {
+      background-color: #28a745;
+    }
+
+    button.equals:hover {
+      background-color: #1e7e34;
+    }
+
+    button.clear {
+      background-color: #dc3545;
+    }
+
+    button.clear:hover {
+      background-color: #c82333;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <div class="display" id="display">0</div>
+    <div class="buttons">
+      <button class="clear" onclick="clearCalculator()">C</button>
+      <button onclick="backspace()">⌫</button>
+      <button class="operator" onclick="operate('/')">/</button>
+      <button class="operator" onclick="operate('*')">*</button>
+      <button onclick="appendDigit('7')">7</button>
+      <button onclick="appendDigit('8')">8</button>
+      <button onclick="appendDigit('9')">9</button>
+      <button class="operator" onclick="operate('-')">-</button>
+      <button onclick="appendDigit('4')">4</button>
+      <button onclick="appendDigit('5')">5</button>
+      <button onclick="appendDigit('6')">6</button>
+      <button class="operator" onclick="operate('+')">+</button>
+      <button onclick="appendDigit('1')">1</button>
+      <button onclick="appendDigit('2')">2</button>
+      <button onclick="appendDigit('3')">3</button>
+      <button class="equals" onclick="equals()">=</button>
+      <button onclick="appendDigit('0')">0</button>
+      <button onclick="appendDigit('.')">.</button>
+    </div>
+  </div>
+
+  <script>
+    let currentValue = '0';
+    let previousValue = null;
+    let operation = null;
+
+    function appendDigit(digit) {
+      if (currentValue === '0' && digit !== '.') {
+        currentValue = digit;
+      } else {
+        currentValue += digit;
+      }
+      updateDisplay();
+    }
+
+    function operate(op) {
+      if (previousValue !== null && operation !== null) {
+        calculate();
+      }
+      operation = op;
+      previousValue = parseFloat(currentValue);
+      currentValue = '0';
+    }
+
+    function equals() {
+      if (previousValue !== null && operation !== null) {
+        calculate();
+        operation = null;
+        previousValue = null;
+      }
+    }
+
+    function calculate() {
+      const current = parseFloat(currentValue);
+      let result;
+      switch (operation) {
+        case '+':
+          result = previousValue + current;
+          break;
+        case '-':
+          result = previousValue - current;
+          break;
+        case '*':
+          result = previousValue * current;
+          break;
+        case '/':
+          if (current === 0) {
+            updateDisplay('Error: Division by zero');
+            return;
+          }
+          result = previousValue / current;
+          break;
+      }
+      currentValue = result.toString();
+      updateDisplay();
+    }
+
+    function clearCalculator() {
+      currentValue = '0';
+      previousValue = null;
+      operation = null;
+      updateDisplay();
+    }
+
+    function backspace() {
+      if (currentValue.length > 1) {
+        currentValue = currentValue.slice(0, -1);
+      } else {
+        currentValue = '0';
+      }
+      updateDisplay();
+    }
+
+    function updateDisplay(message = currentValue) {
+      document.getElementById('display').textContent = message;
+    }
+  </script>
+</body>
+</html>
