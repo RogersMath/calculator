@@ -1,105 +1,118 @@
-:root {
-  --primary-bg: #282828;
-  --display-bg: #3c3c3c;
-  --btn-default: #444444;
-  --btn-operator: #007bff;
-  --btn-equals: #28a745;
-  --btn-clear: #dc3545;
-  --btn-memory: #6c757d;
-  --btn-function: #17a2b8;
+// UI Configuration and Button Setup
+const buttonConfig = [
+  // Row 1
+  { text: '2nd', class: 'second', handler: 'toggleSecond' },
+  { text: 'MR', class: 'memory', handler: 'memoryRecall' },
+  { text: 'MS', class: 'memory', handler: 'memoryStore' },
+  { text: 'M+', class: 'memory', handler: 'memoryAdd' },
+  { text: 'C', class: 'clear', handler: 'clear' },
+
+  // Row 2
+  { text: 'x²', secondaryText: 'x³', class: 'function', handler: 'square' },
+  { text: '√x', secondaryText: '∛x', class: 'function', handler: 'sqrt' },
+  { text: '1/x', class: 'function', handler: 'inverse' },
+  { text: '%', class: 'function', handler: 'percent' },
+  { text: '/', class: 'operator', handler: 'divide' },
+
+  // Row 3
+  { text: '7', handler: 'number' },
+  { text: '8', handler: 'number' },
+  { text: '9', handler: 'number' },
+  { text: '(', class: 'function', handler: 'parenthesis' },
+  { text: '×', class: 'operator', handler: 'multiply' },
+
+  // Row 4
+  { text: '4', handler: 'number' },
+  { text: '5', handler: 'number' },
+  { text: '6', handler: 'number' },
+  { text: ')', class: 'function', handler: 'parenthesis' },
+  { text: '−', class: 'operator', handler: 'subtract' },
+
+  // Row 5
+  { text: '1', handler: 'number' },
+  { text: '2', handler: 'number' },
+  { text: '3', handler: 'number' },
+  { text: '⌫', handler: 'backspace' },
+  { text: '+', class: 'operator', handler: 'add' },
+
+  // Row 6
+  { text: '0', handler: 'number' },
+  { text: '.', handler: 'decimal' },
+  { text: 'xʸ', class: 'function', handler: 'power' },
+  { text: '=', class: 'equals', handler: 'equals' }
+];
+
+// Display management
+const Display = {
+  updateMain(value) {
+    document.getElementById('display').textContent = value;
+  },
+
+  updatePrevious(expression, showEquals) {
+    document.getElementById('previous-operation').textContent = expression;
+  },
+
+  updateMemoryIndicator(value) {
+    document.getElementById('memory-indicator').textContent = `MEM: ${value}`;
+  },
+
+  updateSecondMode(isActive) {
+    document.getElementById('second-indicator').textContent = `2ND: ${isActive ? 'ON' : 'OFF'}`;
+    document.querySelector('.second').classList.toggle('active', isActive);
+  }
+};
+
+// UI initialization
+function initializeCalculator(handlers) {
+  const buttonsContainer = document.getElementById('calculator-buttons');
+  
+  buttonConfig.forEach(config => {
+    const button = document.createElement('button');
+    if (config.class) button.className = config.class;
+    
+    if (config.secondaryText) {
+      button.innerHTML = `
+        <span class="secondary-function">${config.secondaryText}</span>
+        <span>${config.text}</span>
+      `;
+    } else {
+      button.textContent = config.text;
+    }
+    
+    button.addEventListener('click', () => {
+      const handler = handlers[config.handler];
+      if (handler) {
+        handler(config.text);
+      }
+    });
+    
+    buttonsContainer.appendChild(button);
+  });
 }
 
-body {
-  font-family: Arial, sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-  background-color: #f0f0f0;
+// Keyboard handler setup
+function setupKeyboardSupport(handlers) {
+  document.addEventListener('keydown', (e) => {
+    const keyHandlers = {
+      'Enter': 'equals',
+      'Escape': 'clear',
+      'Backspace': 'backspace',
+      '+': 'add',
+      '-': 'subtract',
+      '*': 'multiply',
+      '/': 'divide',
+      '(': 'parenthesis',
+      ')': 'parenthesis'
+    };
+
+    if (/^[0-9]$/.test(e.key)) {
+      handlers.number(e.key);
+    } else if (e.key === '.') {
+      handlers.decimal();
+    } else if (keyHandlers[e.key]) {
+      handlers[keyHandlers[e.key]](e.key);
+    }
+  });
 }
 
-.calculator {
-  background-color: var(--primary-bg);
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  max-width: 350px;
-  width: 100%;
-}
-
-.display {
-  background-color: var(--display-bg);
-  color: #fff;
-  padding: 15px;
-  font-size: 24px;
-  text-align: right;
-  margin-bottom: 15px;
-  border-radius: 5px;
-  min-height: 30px;
-  word-wrap: break-word;
-  position: relative;
-}
-
-.previous-operation {
-  position: absolute;
-  top: 5px;
-  right: 10px;
-  font-size: 14px;
-  color: #888;
-}
-
-.current-value {
-  margin-top: 15px;
-}
-
-.mode-indicators {
-  display: flex;
-  justify-content: space-between;
-  color: #888;
-  font-size: 12px;
-  margin-bottom: 5px;
-}
-
-.buttons {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  grid-gap: 8px;
-}
-
-button {
-  background-color: var(--btn-default);
-  color: #fff;
-  border: none;
-  padding: 12px 8px;
-  font-size: 16px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
-  user-select: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 45px;
-}
-
-.secondary-function {
-  font-size: 12px;
-  color: #888;
-  margin-bottom: 2px;
-}
-
-button:active { transform: scale(0.95); }
-button:hover { filter: brightness(1.1); }
-button.operator { background-color: var(--btn-operator); }
-button.equals { background-color: var(--btn-equals); }
-button.clear, button.second { background-color: var(--btn-clear); }
-button.memory { background-color: var(--btn-memory); }
-button.function { background-color: var(--btn-function); }
-button.active { border: 2px solid #fff; }
-
-@media (max-width: 400px) {
-  .calculator { width: 95%; margin: 10px; }
-  button { padding: 8px 4px; font-size: 14px; }
-}
+export { Display, initializeCalculator, setupKeyboardSupport };
