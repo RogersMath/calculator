@@ -62,57 +62,58 @@ const Display = {
   }
 };
 
-// UI initialization
-function initializeCalculator(handlers) {
-  const buttonsContainer = document.getElementById('calculator-buttons');
-  
-  buttonConfig.forEach(config => {
-    const button = document.createElement('button');
-    if (config.class) button.className = config.class;
+// Make objects available globally
+window.calculatorUI = {
+  buttonConfig,
+  Display,
+  initializeCalculator: function(handlers) {
+    const buttonsContainer = document.getElementById('calculator-buttons');
     
-    if (config.secondaryText) {
-      button.innerHTML = `
-        <span class="secondary-function">${config.secondaryText}</span>
-        <span>${config.text}</span>
-      `;
-    } else {
-      button.textContent = config.text;
-    }
-    
-    button.addEventListener('click', () => {
-      const handler = handlers[config.handler];
-      if (handler) {
-        handler(config.text);
+    buttonConfig.forEach(config => {
+      const button = document.createElement('button');
+      if (config.class) button.className = config.class;
+      
+      if (config.secondaryText) {
+        button.innerHTML = `
+          <span class="secondary-function">${config.secondaryText}</span>
+          <span>${config.text}</span>
+        `;
+      } else {
+        button.textContent = config.text;
+      }
+      
+      button.addEventListener('click', () => {
+        const handler = handlers[config.handler];
+        if (handler) {
+          handler(config.text);
+        }
+      });
+      
+      buttonsContainer.appendChild(button);
+    });
+  },
+
+  setupKeyboardSupport: function(handlers) {
+    document.addEventListener('keydown', (e) => {
+      const keyHandlers = {
+        'Enter': 'equals',
+        'Escape': 'clear',
+        'Backspace': 'backspace',
+        '+': 'add',
+        '-': 'subtract',
+        '*': 'multiply',
+        '/': 'divide',
+        '(': 'parenthesis',
+        ')': 'parenthesis'
+      };
+
+      if (/^[0-9]$/.test(e.key)) {
+        handlers.number(e.key);
+      } else if (e.key === '.') {
+        handlers.decimal();
+      } else if (keyHandlers[e.key]) {
+        handlers[keyHandlers[e.key]](e.key);
       }
     });
-    
-    buttonsContainer.appendChild(button);
-  });
-}
-
-// Keyboard handler setup
-function setupKeyboardSupport(handlers) {
-  document.addEventListener('keydown', (e) => {
-    const keyHandlers = {
-      'Enter': 'equals',
-      'Escape': 'clear',
-      'Backspace': 'backspace',
-      '+': 'add',
-      '-': 'subtract',
-      '*': 'multiply',
-      '/': 'divide',
-      '(': 'parenthesis',
-      ')': 'parenthesis'
-    };
-
-    if (/^[0-9]$/.test(e.key)) {
-      handlers.number(e.key);
-    } else if (e.key === '.') {
-      handlers.decimal();
-    } else if (keyHandlers[e.key]) {
-      handlers[keyHandlers[e.key]](e.key);
-    }
-  });
-}
-
-export { Display, initializeCalculator, setupKeyboardSupport };
+  }
+};
