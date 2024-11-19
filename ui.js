@@ -1,102 +1,41 @@
-function displayStat(label, value) {
-    const box = document.createElement('div');
-    box.className = 'stat-box';
-    box.innerHTML = `
-        <div class="stat-label">${label}</div>
-        <div class="stat-value">${typeof value === 'number' ? value.toFixed(2) : value}</div>
-    `;
-    return box;
-}
-
-function createHistogram(data) {
-    const ctx = document.getElementById('histogram').getContext('2d');
-    const { bins, binEdges } = getHistogramBins(data);
-    const labels = binEdges.slice(0, -1).map((edge, i) => 
-        `${edge.toFixed(1)}-${binEdges[i + 1].toFixed(1)}`
-    );
-
-    return new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Frequency',
-                data: bins,
-                backgroundColor: 'rgba(0, 102, 204, 0.5)',
-                borderColor: 'rgba(0, 102, 204, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Histogram'
-                }
-            }
-        }
-    });
-}
-
-function createFrequencyPolygon(data) {
-    const ctx = document.getElementById('freqPolygon').getContext('2d');
-    const { bins, binEdges } = getHistogramBins(data);
-    const centerPoints = binEdges.slice(0, -1).map((edge, i) => 
-        (edge + binEdges[i + 1]) / 2
-    );
-
-    return new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: centerPoints.map(x => x.toFixed(1)),
-            datasets: [{
-                label: 'Frequency',
-                data: bins,
-                borderColor: 'rgba(255, 99, 132, 1)',
-                tension: 0.4,
-                fill: false
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Frequency Polygon'
-                }
-            }
-        }
-    });
-}
-
-function createBoxPlot(data) {
-    const ctx = document.getElementById('boxPlot').getContext('2d');
-    const outliers = findOutliers(data);
-    const nonOutliers = data.filter(x => !outliers.includes(x));
-
-    return new Chart(ctx, {
-        type: 'boxplot',
-        data: {
-            labels: ['Distribution'],
-            datasets: [{
-                label: 'Box Plot',
-                data: [nonOutliers],
-                backgroundColor: 'rgba(0, 102, 204, 0.5)',
-                borderColor: 'rgba(0, 102, 204, 1)',
-                borderWidth: 1,
-                outlierBackgroundColor: 'rgba(255, 99, 132, 0.5)',
-                outlierBorderColor: 'rgba(255, 99, 132, 1)',
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Box Plot'
-                }
-            }
-        }
-    });
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Statistics Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-box-and-violin-plot@4.0.0/build/index.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Advanced Statistics Calculator</h1>
+        <div class="input-section">
+            <textarea id="dataInput" placeholder="Enter numbers (comma, tab, or space separated)"></textarea>
+            <div class="button-group">
+                <button onclick="calculateAndDisplay()">Calculate Statistics</button>
+                <button onclick="generateVisualizations()">Generate Plots</button>
+                <button onclick="identifyOutliers()">Identify Outliers</button>
+                <button onclick="trimOutliers()">Trim Outliers</button>
+            </div>
+        </div>
+        <div id="error" class="error"></div>
+        <div id="results" class="results"></div>
+        <div class="charts-container">
+            <div class="chart-wrapper">
+                <canvas id="histogram"></canvas>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="freqPolygon"></canvas>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="boxPlot"></canvas>
+            </div>
+        </div>
+    </div>
+    <script src="helperFunctions.js"></script>
+    <script src="ui.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
