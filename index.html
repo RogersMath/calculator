@@ -3,13 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Statistics Calculator</title>
+    <title>Advanced Statistics Calculator</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Load Chart.js and its plugin first -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-box-and-violin-plot@4.0.0/build/index.umd.min.js"></script>
+    <!-- Load our utility functions next -->
+    <script src="helperFunctions.js"></script>
+    <!-- Load UI functions that depend on helper functions -->
+    <script src="ui.js"></script>
+    <!-- Load main.js last since it depends on both helper and UI functions -->
+    <script src="main.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>Statistics Calculator - Just Copy/Paste Your Data!</h1>
+        <h1>Advanced Statistics Calculator</h1>
         <div class="input-section">
             <textarea id="dataInput" placeholder="Enter numbers (comma, tab, or space separated)"></textarea>
             <div class="button-group">
@@ -33,8 +41,5 @@
             </div>
         </div>
     </div>
-    <script src="helperFunctions.js"></script>
-    <script src="ui.js"></script>
-    <script src="main.js"></script>
 </body>
 </html>
