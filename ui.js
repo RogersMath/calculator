@@ -72,31 +72,21 @@ function createFrequencyPolygon(data) {
 
 function createBoxPlot(data) {
     const ctx = document.getElementById('boxPlot').getContext('2d');
-    const sortedData = [...data].sort((a, b) => a - b);
-    const min = Math.min(...data);
-    const max = Math.max(...data);
-    const q1 = quartile(data, 0.25);
-    const med = median(data);
-    const q3 = quartile(data, 0.75);
     const outliers = findOutliers(data);
+    const nonOutliers = data.filter(x => !outliers.includes(x));
 
     return new Chart(ctx, {
         type: 'boxplot',
         data: {
-            labels: ['Dataset'],
+            labels: ['Distribution'],
             datasets: [{
                 label: 'Box Plot',
-                data: [{
-                    min: min,
-                    q1: q1,
-                    median: med,
-                    q3: q3,
-                    max: max,
-                    outliers: outliers
-                }],
+                data: [nonOutliers],
                 backgroundColor: 'rgba(0, 102, 204, 0.5)',
                 borderColor: 'rgba(0, 102, 204, 1)',
                 borderWidth: 1,
+                outlierBackgroundColor: 'rgba(255, 99, 132, 0.5)',
+                outlierBorderColor: 'rgba(255, 99, 132, 1)',
             }]
         },
         options: {
