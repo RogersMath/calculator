@@ -72,22 +72,49 @@ function createFrequencyPolygon(data) {
 
 function createBoxPlot(data) {
     const ctx = document.getElementById('boxPlot').getContext('2d');
-    const outliers = findOutliers(data);
-    const nonOutliers = data.filter(x => !outliers.includes(x));
-
+    const q1 = quartile(data, 0.25);
+    const q3 = quartile(data, 0.75);
+    const med = median(data);
+    const min = Math.min(...data);
+    const max = Math.max(...data);
+    
     return new Chart(ctx, {
-        type: 'boxplot',
+        type: 'bar',
         data: {
             labels: ['Distribution'],
-            datasets: [{
-                label: 'Box Plot',
-                data: [nonOutliers],
-                backgroundColor: 'rgba(0, 102, 204, 0.5)',
-                borderColor: 'rgba(0, 102, 204, 1)',
-                borderWidth: 1,
-                outlierBackgroundColor: 'rgba(255, 99, 132, 0.5)',
-                outlierBorderColor: 'rgba(255, 99, 132, 1)',
-            }]
+            datasets: [
+                // IQR Box
+                {
+                    label: 'IQR',
+                    data: [q3 - q1],
+                    backgroundColor: 'rgba(0, 102, 204, 0.5)',
+                    borderColor: 'rgba(0, 102, 204, 1)',
+                    borderWidth: 1,
+                    base: q1
+                },
+                // Median line
+                {
+                    label: 'Median',
+                    data: [med],
+                    type: 'line',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 2,
+                    pointStyle: 'line',
+                    pointBorderWidth: 2,
+                    pointRadius: 10,
+                },
+                // Min and Max whiskers
+                {
+                    label: 'Range',
+                    data: [min, max],
+                    type: 'line',
+                    borderColor: 'rgba(0, 102, 204, 1)',
+                    borderWidth: 1,
+                    pointStyle: 'line',
+                    pointBorderWidth: 1,
+                    pointRadius: 5,
+                }
+            ]
         },
         options: {
             responsive: true,
@@ -95,6 +122,28 @@ function createBoxPlot(data) {
                 title: {
                     display: true,
                     text: 'Box Plot'
+                },
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const labels = {
+                                'Min': min,
+                                'Q1': q1,
+                                'Median': med,
+                                'Q3': q3,
+                                'Max': max
+                            };
+                            return `${context.dataset.label}: ${context.raw.toFixed(2)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false
                 }
             }
         }
