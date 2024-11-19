@@ -1,193 +1,84 @@
-// Initialize after UI script is loaded
-window.addEventListener('DOMContentLoaded', () => {
-  // Make sure calculatorUI exists
-  if (!window.calculatorUI) {
-    console.error('Calculator UI not initialized');
-    return;
-  }
+let currentData = [];
+let charts = {
+    histogram: null,
+    freqPolygon: null,
+    boxPlot: null
+};
 
-  // Calculator State Management
-  const CalculatorState = {
-    currentValue: '0',
-    previousValue: null,
-    operation: null,
-    newNumberStarted: false,
-    secondMode: false,
-    memory: 0,
-    variables: {},
+function calculateAndDisplay() {
+    const input = document.getElementById('dataInput').value;
+    const error = document.getElementById('error');
+    const results = document.getElementById('results');
+    results.innerHTML = '';
+    error.textContent = '';
 
-    reset() {
-      this.currentValue = '0';
-      this.previousValue = null;
-      this.operation = null;
-      this.newNumberStarted = false;
+    currentData = parseInput(input);
+
+    if (currentData.length < 2) {
+        error.textContent = 'Please enter at least 2 valid numbers';
+        return;
     }
-  };
 
-  // Mathematical Operations
-  const Operations = {
-    basic: {
-      add: (a, b) => a + b,
-      subtract: (a, b) => a - b,
-      multiply: (a, b) => a * b,
-      divide: (a, b) => b !== 0 ? a / b : null,
-      power: (a, b) => Math.pow(a, b)
-    },
+    const sorted = [...currentData].sort((a, b) => a - b);
+    const stats = {
+        'Mean': mean(currentData),
+        'Median': median(currentData),
+        'Mode': mode(currentData).join(', '),
+        'Range': sorted[sorted.length - 1] - sorted[0],
+        'Midrange': (sorted[sorted.length - 1] + sorted[0]) / 2,
+        'Standard Deviation': standardDeviation(currentData),
+        'Variance': variance(currentData),
+        'Minimum': sorted[0],
+        'Q1': quartile(currentData, 0.25),
+        'Q3': quartile(currentData, 0.75),
+        'Maximum': sorted[sorted.length - 1],
+        'IQR': quartile(currentData, 0.75) - quartile(currentData, 0.25)
+    };
 
-    scientific: {
-      square: x => Math.pow(x, 2),
-      cube: x => Math.pow(x, 3),
-      sqrt: x => Math.sqrt(x),
-      cubeRoot: x => Math.cbrt(x),
-      inverse: x => x !== 0 ? 1 / x : null,
-      percent: x => x / 100
+    Object.entries(stats).forEach(([label, value]) => {
+        results.appendChild(displayStat(label, value));
+    });
+}
+
+function generateVisualizations() {
+    if (currentData.length < 2) {
+        document.getElementById('error').textContent = 'Please calculate statistics first';
+        return;
     }
-  };
 
-  // Event Handlers
-  const Handlers = {
-    number(value) {
-      if (CalculatorState.newNumberStarted) {
-        CalculatorState.currentValue = value;
-        CalculatorState.newNumberStarted = false;
-      } else if (CalculatorState.currentValue === '0' && value !== '.') {
-        CalculatorState.currentValue = value;
-      } else {
-        CalculatorState.currentValue += value;
-      }
-      window.calculatorUI.Display.updateMain(CalculatorState.currentValue);
-    },
+    // Destroy existing charts
+    Object.values(charts).forEach(chart => chart?.destroy());
 
-    decimal() {
-      if (!CalculatorState.currentValue.includes('.')) {
-        CalculatorState.currentValue += '.';
-        window.calculatorUI.Display.updateMain(CalculatorState.currentValue);
-      }
-    },
+    // Create new charts
+    charts.histogram = createHistogram(currentData);
+    charts.freqPolygon = createFrequencyPolygon(currentData);
+    charts.boxPlot = createBoxPlot(currentData);
+}
 
-    // Map operator symbols to their function names
-    divide: () => Handlers.operator('/'),
-    multiply: () => Handlers.operator('*'),
-    subtract: () => Handlers.operator('-'),
-    add: () => Handlers.operator('+'),
-    power: () => Handlers.operator('^'),
-
-    operator(op) {
-      if (CalculatorState.previousValue !== null) {
-        Handlers.calculate();
-      }
-      CalculatorState.operation = op;
-      CalculatorState.previousValue = parseFloat(CalculatorState.currentValue);
-      CalculatorState.newNumberStarted = true;
-      Handlers.updateOperation();
-    },
-
-    square() {
-      const func = CalculatorState.secondMode ? 'cube' : 'square';
-      Handlers.scientific(func);
-    },
-
-    sqrt() {
-      const func = CalculatorState.secondMode ? 'cubeRoot' : 'sqrt';
-      Handlers.scientific(func);
-    },
-
-    inverse() {
-      Handlers.scientific('inverse');
-    },
-
-    percent() {
-      Handlers.scientific('percent');
-    },
-
-    scientific(func) {
-      const value = parseFloat(CalculatorState.currentValue);
-      const operation = Operations.scientific[func];
-      if (operation) {
-        const result = operation(value);
-        if (result === null) {
-          CalculatorState.currentValue = 'Error';
-        } else {
-          CalculatorState.currentValue = result.toString();
-        }
-        window.calculatorUI.Display.updateMain(CalculatorState.currentValue);
-      }
-    },
-
-    calculate() {
-      if (CalculatorState.previousValue === null || CalculatorState.operation === null) return;
-
-      const current = parseFloat(CalculatorState.currentValue);
-      const prev = CalculatorState.previousValue;
-      const operation = Operations.basic[CalculatorState.operation];
-
-      if (operation) {
-        const result = operation(prev, current);
-        if (result === null) {
-          CalculatorState.currentValue = 'Error';
-        } else {
-          CalculatorState.currentValue = parseFloat(result.toFixed(10))
-            .toString()
-            .replace(/\.?0+$/, '');
-        }
-      }
-      window.calculatorUI.Display.updateMain(CalculatorState.currentValue);
-    },
-
-    equals() {
-      Handlers.calculate();
-      CalculatorState.operation = null;
-      CalculatorState.previousValue = null;
-      Handlers.updateOperation();
-    },
-
-    clear() {
-      CalculatorState.reset();
-      window.calculatorUI.Display.updateMain('0');
-      Handlers.updateOperation();
-    },
-
-    backspace() {
-      if (CalculatorState.currentValue.length > 1) {
-        CalculatorState.currentValue = CalculatorState.currentValue.slice(0, -1);
-      } else {
-        CalculatorState.currentValue = '0';
-      }
-      window.calculatorUI.Display.updateMain(CalculatorState.currentValue);
-    },
-
-    toggleSecond() {
-      CalculatorState.secondMode = !CalculatorState.secondMode;
-      window.calculatorUI.Display.updateSecondMode(CalculatorState.secondMode);
-    },
-
-    updateOperation() {
-      const { previousValue, operation, currentValue } = CalculatorState;
-      if (previousValue !== null && operation !== null) {
-        window.calculatorUI.Display.updatePrevious(`${previousValue} ${operation}`);
-      } else {
-        window.calculatorUI.Display.updatePrevious('');
-      }
-    },
-
-    // Memory operations
-    memoryRecall() {
-      CalculatorState.currentValue = CalculatorState.memory.toString();
-      window.calculatorUI.Display.updateMain(CalculatorState.currentValue);
-    },
-
-    memoryStore() {
-      CalculatorState.memory = parseFloat(CalculatorState.currentValue);
-      window.calculatorUI.Display.updateMemoryIndicator(CalculatorState.memory);
-    },
-
-    memoryAdd() {
-      CalculatorState.memory += parseFloat(CalculatorState.currentValue);
-      window.calculatorUI.Display.updateMemoryIndicator(CalculatorState.memory);
+function identifyOutliers() {
+    if (currentData.length < 2) {
+        document.getElementById('error').textContent = 'Please calculate statistics first';
+        return;
     }
-  };
 
-  // Initialize calculator
-  window.calculatorUI.initializeCalculator(Handlers);
-  window.calculatorUI.setupKeyboardSupport(Handlers);
-});
+    const outliers = findOutliers(currentData);
+    const results = document.getElementById('results');
+    
+    if (outliers.length > 0) {
+        results.appendChild(displayStat('Outliers', outliers.join(', ')));
+    } else {
+        results.appendChild(displayStat('Outliers', 'None found'));
+    }
+}
+
+function trimOutliers() {
+    if (currentData.length < 2) {
+        document.getElementById('error').textContent = 'Please calculate statistics first';
+        return;
+    }
+
+    const trimmedData = trimOutliersFromData(currentData);
+    document.getElementById('dataInput').value = trimmedData.join(', ');
+    calculateAndDisplay();
+    generateVisualizations();
+}
