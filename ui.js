@@ -1,119 +1,112 @@
-// UI Configuration and Button Setup
-const buttonConfig = [
-  // Row 1
-  { text: '2nd', class: 'second', handler: 'toggleSecond' },
-  { text: 'MR', class: 'memory', handler: 'memoryRecall' },
-  { text: 'MS', class: 'memory', handler: 'memoryStore' },
-  { text: 'M+', class: 'memory', handler: 'memoryAdd' },
-  { text: 'C', class: 'clear', handler: 'clear' },
+function displayStat(label, value) {
+    const box = document.createElement('div');
+    box.className = 'stat-box';
+    box.innerHTML = `
+        <div class="stat-label">${label}</div>
+        <div class="stat-value">${typeof value === 'number' ? value.toFixed(2) : value}</div>
+    `;
+    return box;
+}
 
-  // Row 2
-  { text: 'x²', secondaryText: 'x³', class: 'function', handler: 'square' },
-  { text: '√x', secondaryText: '∛x', class: 'function', handler: 'sqrt' },
-  { text: '1/x', class: 'function', handler: 'inverse' },
-  { text: '%', class: 'function', handler: 'percent' },
-  { text: '/', class: 'operator', handler: 'divide' },
+function createHistogram(data) {
+    const ctx = document.getElementById('histogram').getContext('2d');
+    const { bins, binEdges } = getHistogramBins(data);
+    const labels = binEdges.slice(0, -1).map((edge, i) => 
+        `${edge.toFixed(1)}-${binEdges[i + 1].toFixed(1)}`
+    );
 
-  // Row 3
-  { text: '7', handler: 'number' },
-  { text: '8', handler: 'number' },
-  { text: '9', handler: 'number' },
-  { text: '(', class: 'function', handler: 'parenthesis' },
-  { text: '×', class: 'operator', handler: 'multiply' },
-
-  // Row 4
-  { text: '4', handler: 'number' },
-  { text: '5', handler: 'number' },
-  { text: '6', handler: 'number' },
-  { text: ')', class: 'function', handler: 'parenthesis' },
-  { text: '−', class: 'operator', handler: 'subtract' },
-
-  // Row 5
-  { text: '1', handler: 'number' },
-  { text: '2', handler: 'number' },
-  { text: '3', handler: 'number' },
-  { text: '⌫', handler: 'backspace' },
-  { text: '+', class: 'operator', handler: 'add' },
-
-  // Row 6
-  { text: '0', handler: 'number' },
-  { text: '.', handler: 'decimal' },
-  { text: 'xʸ', class: 'function', handler: 'power' },
-  { text: '=', class: 'equals', handler: 'equals' }
-];
-
-// Display management
-const Display = {
-  updateMain(value) {
-    document.getElementById('display').textContent = value;
-  },
-
-  updatePrevious(expression, showEquals) {
-    document.getElementById('previous-operation').textContent = expression;
-  },
-
-  updateMemoryIndicator(value) {
-    document.getElementById('memory-indicator').textContent = `MEM: ${value}`;
-  },
-
-  updateSecondMode(isActive) {
-    document.getElementById('second-indicator').textContent = `2ND: ${isActive ? 'ON' : 'OFF'}`;
-    document.querySelector('.second').classList.toggle('active', isActive);
-  }
-};
-
-// Make objects available globally
-window.calculatorUI = {
-  buttonConfig,
-  Display,
-  initializeCalculator: function(handlers) {
-    const buttonsContainer = document.getElementById('calculator-buttons');
-    
-    buttonConfig.forEach(config => {
-      const button = document.createElement('button');
-      if (config.class) button.className = config.class;
-      
-      if (config.secondaryText) {
-        button.innerHTML = `
-          <span class="secondary-function">${config.secondaryText}</span>
-          <span>${config.text}</span>
-        `;
-      } else {
-        button.textContent = config.text;
-      }
-      
-      button.addEventListener('click', () => {
-        const handler = handlers[config.handler];
-        if (handler) {
-          handler(config.text);
+    return new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Frequency',
+                data: bins,
+                backgroundColor: 'rgba(0, 102, 204, 0.5)',
+                borderColor: 'rgba(0, 102, 204, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Histogram'
+                }
+            }
         }
-      });
-      
-      buttonsContainer.appendChild(button);
     });
-  },
+}
 
-  setupKeyboardSupport: function(handlers) {
-    document.addEventListener('keydown', (e) => {
-      const keyHandlers = {
-        'Enter': 'equals',
-        'Escape': 'clear',
-        'Backspace': 'backspace',
-        '+': 'add',
-        '-': 'subtract',
-        '*': 'multiply',
-        '/': 'divide',
-        '(': 'parenthesis',
-        ')': 'parenthesis'
-      };
+function createFrequencyPolygon(data) {
+    const ctx = document.getElementById('freqPolygon').getContext('2d');
+    const { bins, binEdges } = getHistogramBins(data);
+    const centerPoints = binEdges.slice(0, -1).map((edge, i) => 
+        (edge + binEdges[i + 1]) / 2
+    );
 
-      if (/^[0-9]$/.test(e.key)) {
-        handlers.number(e.key);
-      } else if (e.key === '.') {
-        handlers.decimal();
-      } else if (keyHandlers[e.key]) {
-        handlers[keyHandlers[e.key]](e.key);
-      }
+    return new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: centerPoints.map(x => x.toFixed(1)),
+            datasets: [{
+                label: 'Frequency',
+                data: bins,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                tension: 0.4,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Frequency Polygon'
+                }
+            }
+        }
     });
-  }
-};
+}
+
+function createBoxPlot(data) {
+    const ctx = document.getElementById('boxPlot').getContext('2d');
+    const sortedData = [...data].sort((a, b) => a - b);
+    const min = Math.min(...data);
+    const max = Math.max(...data);
+    const q1 = quartile(data, 0.25);
+    const med = median(data);
+    const q3 = quartile(data, 0.75);
+    const outliers = findOutliers(data);
+
+    return new Chart(ctx, {
+        type: 'boxplot',
+        data: {
+            labels: ['Dataset'],
+            datasets: [{
+                label: 'Box Plot',
+                data: [{
+                    min: min,
+                    q1: q1,
+                    median: med,
+                    q3: q3,
+                    max: max,
+                    outliers: outliers
+                }],
+                backgroundColor: 'rgba(0, 102, 204, 0.5)',
+                borderColor: 'rgba(0, 102, 204, 1)',
+                borderWidth: 1,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Box Plot'
+                }
+            }
+        }
+    });
+}
