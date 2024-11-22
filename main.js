@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const sorted = [...currentData].sort((a, b) => a - b);
         const stats = {
             'Mean': mean(currentData),
+            'Size': currentData.size,
             'Median': median(currentData),
             'Mode': mode(currentData).join(', '),
             'Range': sorted[sorted.length - 1] - sorted[0],
